@@ -50,7 +50,7 @@ printFrame(){
 	tput cup 1 0
 	echo -n "┏"
 	c=3 ;while [ ${c} -lt ${cols} ] ; do echo -n "━"; c=$((${c} + 1)); done
-	echo -n "┑"
+	echo -n "┓"
 
 	tput cup 2 0
 	echo -n "┃"
@@ -58,9 +58,9 @@ printFrame(){
 	echo -n "┃"
 
 	tput cup 3 0
-	echo -n "└"
+	echo -n "┗"
 	c=3 ;while [ ${c} -lt ${cols} ] ; do echo -n "━"; c=$((${c} + 1)); done
-	echo -n "┘"
+	echo -n "┛"
 }
 
 printProgress(){
