@@ -34,7 +34,11 @@ showDoneMsg(){
 
 printUsage(){
 	echo
-	echo " Usage : $0 <time> "
+	echo " Usage : $0 <time> <cmd>"
+	echo ""
+	echo " Parameter:"
+	echo "     time - seconds"
+	echo "     cmd - commands to run when timer done"
 	echo
 }
 
@@ -96,13 +100,18 @@ printProgress(){
 
 # Main Start
 # -----------------------------------------------------------------------------
-intime=$1
-ctime=0
-
-if [ $# -ne 1 ] ; then
+if [ $# -lt 1 ] ; then
 	printUsage
 	exit -1 
 fi
+intime=$1;shift
+if [ $# -lt 1 ] ; then
+	cmd=""
+else
+	cmd=$@
+fi
+ctime=0
+
 
 pcols=0
 prows=0
@@ -132,5 +141,9 @@ rows=`tput lines`
 clear
 printTitle
 printFrame ${cols} ${rows}
-showDoneMsg ${cols} ${rows}
+if [ "x${cmd}" = "x" ] ; then
+	showDoneMsg ${cols} ${rows}
+else
+	${cmd}
+fi
 
