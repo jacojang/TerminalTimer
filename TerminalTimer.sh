@@ -47,6 +47,12 @@ printTitle(){
 	echo -n " Simple timer for Terminal by jacojang "
 }
 
+printSubTitle(){
+	tput cup 4 0
+	echo -n " [key mapping] p:pause/resume, r:reset"
+}
+
+
 printFrame(){
 	cols=$1
 	rows=$2
@@ -65,6 +71,20 @@ printFrame(){
 	echo -n "┗"
 	c=3 ;while [ ${c} -lt ${cols} ] ; do echo -n "━"; c=$((${c} + 1)); done
 	echo -n "┛"
+}
+
+printPause(){
+	pause=$1
+	cols=$2
+	rows=$3
+
+	tput cup 2 $((${cols} / 2 - 4))
+	if [ ${pause} -eq 1 ] ; then
+		tput setaf 1
+		tput setab 3
+		echo -ne " Paused "
+	fi
+	goToCursorEnd ${cols} ${rows} 
 }
 
 printProgress(){
@@ -96,7 +116,18 @@ printProgress(){
 	printTime ${intime}
 
 	tput sgr0
+
+	goToCursorEnd ${cols} ${rows} 
 }
+
+goToCursorEnd(){
+	cols=$1
+	rows=$2
+
+	tput setab 9
+	tput cup 4 $((${cols} - 2))
+}
+
 
 # Main Start
 # -----------------------------------------------------------------------------
@@ -115,6 +146,8 @@ ctime=0
 
 pcols=0
 prows=0
+pause=0
+stty -echo
 while [ ${ctime} -lt ${intime} ]
 do
 	cols=`tput cols`
@@ -124,15 +157,55 @@ do
 		clear
 		printTitle
 		printFrame ${cols} ${rows}
+		printSubTitle
 	fi
 
 	printProgress ${cols} ${rows} ${ctime} ${intime}
+	printPause ${pause} ${cols} ${rows}
 
-	sleep 1
-	ctime=$((${ctime} + 1))
+	# sleep 1
+	stime=`date +%s"."%3N`
+	toSleep=1
+	while [ "x${toSleep}" != "x0" ]
+	do
+		read -n 1 -t ${toSleep} keyInput
+
+		case "x${keyInput}" in
+			xp)
+				if [ ${pause} -eq 0 ] ; then
+					pause=1
+					printPause ${pause} ${cols} ${rows}
+				else
+					pause=0
+					printProgress ${cols} ${rows} ${ctime} ${intime}
+				fi
+				;;
+			xr)
+				ctime=-1
+				;;
+			*)
+				#Pass
+				;;
+		esac
+
+		etime=`date +%s"."%3N`
+		
+		gap=`echo "scale=10; ${etime} - ${stime}" | bc` 
+		if [ `echo "${gap} < 1" | bc` -eq 1 ] ; then
+			firstSleep=1
+			toSleep=`echo "scale=10; 1 - ${gap}" | bc`
+		else
+			toSleep=0;
+		fi
+	done
+
+	if [ ${pause} -ne 1 ] ; then
+		ctime=$((${ctime} + 1))
+	fi
 	pcols=${cols}
 	prows=${rows}
 done
+stty echo
 
 
 ## Done Notify 
@@ -146,4 +219,5 @@ if [ "x${cmd}" = "x" ] ; then
 else
 	${cmd}
 fi
+
 
